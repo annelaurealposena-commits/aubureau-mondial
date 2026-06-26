@@ -81,7 +81,7 @@ input:focus,select:focus{outline:none;border-color:#c8a84b;box-shadow:0 0 0 3px 
         <div class="muted" style="margin-bottom:16px;line-height:1.6">Entre tes infos pour participer.<br>L'email permet de retrouver tes points d'une soirée à l'autre.</div>
         <div class="label">Ton prénom *</div>
         <input type="text" id="inp-name" placeholder="Ex : Thomas" style="margin-bottom:12px" autocomplete="given-name">
-        <div class="label">Ton email (optionnel)</div>
+        <div class="label">Ton email *</div>
         <input type="email" id="inp-email" placeholder="thomas@email.com" style="margin-bottom:16px" autocomplete="email">
         <button class="btn btn-primary" onclick="goToProno()">Continuer →</button>
       </div>
@@ -134,7 +134,6 @@ input:focus,select:focus{outline:none;border-color:#c8a84b;box-shadow:0 0 0 3px 
       </div>
       <div class="card" id="recap-card"></div>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="voirClassement()">🏆 Classement en direct</button>
-      <button class="btn btn-secondary" style="margin-top:8px" onclick="nouveauJoueur()">👤 Nouveau joueur</button>
     </div>
 
     <!-- Classement -->
@@ -252,9 +251,9 @@ function afficherMatchProno(){
 function goToProno(){
   playerName=document.getElementById("inp-name").value.trim();
   playerEmail=document.getElementById("inp-email").value.trim();
-  if(!playerName){
-    alert("Entre ton prénom pour continuer 😊");return;
-  }
+  if(!playerName){alert("Entre ton prénom pour continuer 😊");return;}
+  if(!playerEmail){alert("Entre ton email pour continuer 😊");return;}
+  if(!playerEmail.includes("@")){alert("Entre un email valide 😊");return;}
   afficherMatchProno();
   showStep("step-prono");
 }
