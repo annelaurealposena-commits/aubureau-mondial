@@ -264,22 +264,26 @@ async function submitProno(){
   const p2=parseInt(document.getElementById("p2").value)||0;
   const m=unlockedMatch;
   try{
+    // Vérification doublon email + match (si email saisi)
+    if(playerEmail){
+      const checkEmail=await fetch(SUPA_URL+"/rest/v1/pronos?match_id=eq."+m.id+"&email=eq."+encodeURIComponent(playerEmail)+"&select=id",{
+        headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY}
+      });
+      const existEmail=await checkEmail.json();
+      if(existEmail&&existEmail.length>0){
+        alert("❌ Cet email a déjà été utilisé pour ce match !");
+        return;
+      }
+    }
+
+    // Insertion
     const pts=(m.validated&&m.score1!==null)?calcPts(p1,p2,m.score1,m.score2):null;
     const r=await fetch(SUPA_URL+"/rest/v1/pronos",{
       method:"POST",
-      headers:{
-        "apikey":SUPA_KEY,
-        "Authorization":"Bearer "+SUPA_KEY,
-        "Content-Type":"application/json"
-      },
+      headers:{"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json"},
       body:JSON.stringify({match_id:m.id,name:playerName,email:playerEmail||null,p1,p2,pts})
     });
-    if(!r.ok){
-      const err=await r.text();
-      console.error("Erreur insert prono:",err);
-      alert("Erreur d'enregistrement : "+err);
-      return;
-    }
+    if(!r.ok){const err=await r.text();alert("Erreur : "+err);return;}
     document.getElementById("recap-card").innerHTML=`
       <div style="font-weight:700;font-size:15px;margin-bottom:12px">📋 Ton pronostic, ${playerName}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
@@ -291,7 +295,6 @@ async function submitProno(){
       </div>`;
     showStep("step-confirm");
   }catch(e){
-    console.error("Erreur submitProno:",e);
     alert("Erreur de connexion : "+e.message);
   }
 }
