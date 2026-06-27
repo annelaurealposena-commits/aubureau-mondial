@@ -165,7 +165,39 @@ async function api(path,method="GET",body=null){
   return r.json();
 }
 
-function calcPts(p1,p2,s1,s2){
+function parseHeureMatch(dateStr, heureStr){
+  // Convertit "Lun. 22 juin" + "21h00" en objet Date
+  // Mapping mois français
+  const mois={"janv":0,"févr":1,"mars":2,"avr":3,"mai":4,"juin":5,"juil":6,"août":7,"sept":8,"oct":9,"nov":10,"déc":11,
+    "jan":0,"fev":1,"mar":2,"apr":3,"jun":5,"jul":6,"aug":7,"sep":8,"oct":9,"nov":10,"dec":11,
+    "juil.":6,"juin":5};
+  try{
+    // Extraire heure et minutes depuis "21h00"
+    const heureMatch=heureStr.match(/(\d+)h(\d+)/);
+    if(!heureMatch) return null;
+    const h=parseInt(heureMatch[1]);
+    const min=parseInt(heureMatch[2]);
+    // Extraire jour et mois depuis la date
+    const parts=dateStr.toLowerCase().replace(/[.,]/g,"").split(" ");
+    let jour=null, moisNum=null;
+    for(const p of parts){
+      if(/^\d+$/.test(p)) jour=parseInt(p);
+      for(const [k,v] of Object.entries(mois)){
+        if(p.startsWith(k)){moisNum=v;break;}
+      }
+    }
+    if(jour===null||moisNum===null) return null;
+    const annee=2026;
+    return new Date(annee, moisNum, jour, h, min, 0);
+  }catch(e){return null;}
+}
+
+function matchEstFerme(m){
+  const heureDebut=parseHeureMatch(m.date_match, m.hour_match);
+  if(!heureDebut) return false; // si on ne peut pas parser, on laisse ouvert
+  const now=new Date();
+  return now >= heureDebut;
+}
   if(p1===s1&&p2===s2) return 3;
   if(p1-p2===s1-s2) return 2;
   if((p1>p2&&s1>s2)||(p1<p2&&s1<s2)||(p1===p2&&s1===s2)) return 1;
@@ -246,6 +278,21 @@ function afficherMatchProno(){
   document.getElementById("prono-t1").textContent=m.t1;
   document.getElementById("prono-flag2").textContent=m.flag2;
   document.getElementById("prono-t2").textContent=m.t2;
+
+  // Vérifier si le match est déjà commencé
+  if(matchEstFerme(m)){
+    document.getElementById("p1").disabled=true;
+    document.getElementById("p2").disabled=true;
+    document.querySelector("#step-prono .btn-primary").disabled=true;
+    document.querySelector("#step-prono .btn-primary").textContent="⏰ Pronostics fermés";
+    const sub=document.getElementById("prono-match-sub");
+    sub.innerHTML=`📅 ${m.date_match} · ${m.hour_match} <span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">⏰ Match commencé</span>`;
+  } else {
+    document.getElementById("p1").disabled=false;
+    document.getElementById("p2").disabled=false;
+    document.querySelector("#step-prono .btn-primary").disabled=false;
+    document.querySelector("#step-prono .btn-primary").textContent="✅ Valider mon pronostic";
+  }
 }
 
 function goToProno(){
@@ -262,6 +309,12 @@ async function submitProno(){
   const p1=parseInt(document.getElementById("p1").value)||0;
   const p2=parseInt(document.getElementById("p2").value)||0;
   const m=unlockedMatch;
+
+  // Double vérification côté client
+  if(matchEstFerme(m)){
+    alert("⏰ Les pronostics sont fermés — le match a déjà commencé !");
+    return;
+  }
   try{
     // Vérification doublon email + match (si email saisi)
     if(playerEmail){
