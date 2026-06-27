@@ -278,21 +278,6 @@ function afficherMatchProno(){
   document.getElementById("prono-t1").textContent=m.t1;
   document.getElementById("prono-flag2").textContent=m.flag2;
   document.getElementById("prono-t2").textContent=m.t2;
-
-  // Vérifier si le match est déjà commencé
-  if(matchEstFerme(m)){
-    document.getElementById("p1").disabled=true;
-    document.getElementById("p2").disabled=true;
-    document.querySelector("#step-prono .btn-primary").disabled=true;
-    document.querySelector("#step-prono .btn-primary").textContent="⏰ Pronostics fermés";
-    const sub=document.getElementById("prono-match-sub");
-    sub.innerHTML=`📅 ${m.date_match} · ${m.hour_match} <span style="background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px">⏰ Match commencé</span>`;
-  } else {
-    document.getElementById("p1").disabled=false;
-    document.getElementById("p2").disabled=false;
-    document.querySelector("#step-prono .btn-primary").disabled=false;
-    document.querySelector("#step-prono .btn-primary").textContent="✅ Valider mon pronostic";
-  }
 }
 
 function goToProno(){
